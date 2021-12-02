@@ -936,7 +936,7 @@ UNICC_STATIC int @@prefix_get_act( @@prefix_pcb* pcb )
 			return 1;
 		}
 	}
-	
+
 	/* Default production */
 	if( ( pcb-&gt;idx = @@prefix_def_prod[ pcb-&gt;tos-&gt;state ] ) &gt; -1 )
 	{
@@ -1029,7 +1029,7 @@ UNICC_STATIC UNICC_CHAR @@prefix_utf8_getchar( int (*getfn)() )
 	UNICC_CHAR	ch	= 0;
 	int 		nb;
 	int			c;
-	
+
 	if( !getfn )
 		getfn = getchar;
 
@@ -1051,7 +1051,7 @@ UNICC_STATIC UNICC_CHAR @@prefix_utf8_getchar( int (*getfn)() )
 			ch += c;
 			break;
 	}
-	
+
 	ch -= offsets_utf8[ nb ];
 #if UNICC_DEBUG	&gt; 3
 	fprintf( stderr, "%s: getchar: %d\n", UNICC_PARSER, ch );
@@ -1199,7 +1199,7 @@ UNICC_STATIC void @@prefix_clear_input( @@prefix_pcb* pcb )
 			*( pcb-&gt;buf ) = 0;
 		}
 	}
-	
+
 	pcb-&gt;len = 0;
 	pcb-&gt;sym = -1;
 #if UNICC_DEBUG	&gt; 2
@@ -1224,7 +1224,7 @@ UNICC_STATIC void @@prefix_lex( @@prefix_pcb* pcb )
 #if UNICC_DEBUG	&gt; 1
 fprintf( stderr, "%s: lex: next = %d\n", UNICC_PARSER, next );
 #endif
-	
+
 	if( next == pcb-&gt;eof )
 	{
 		pcb-&gt;sym = @@eof;
@@ -1293,13 +1293,13 @@ fprintf( stderr, "%s: lex: new accepting symbol pcb-&gt;sym = %d greedy = %d\n",
 		}
 	}
 	while( dfa_st &gt; -1 &amp;&amp; next != pcb-&gt;eof );
-	
+
 	if( pcb-&gt;sym &gt; -1 )
 	{
 #if UNICC_SEMANTIC_TERM_SEL
 		/*
 			Execute scanner actions, if existing, but with
-			UNICC_ON_SHIFT = 0, so that no memory allocation 
+			UNICC_ON_SHIFT = 0, so that no memory allocation
 			should be performed. This actions should only be
 			handled if there are semantic-code dependent
 			terminal symbol selections.
@@ -1313,7 +1313,7 @@ fprintf( stderr, "%s: lex: new accepting symbol pcb-&gt;sym = %d greedy = %d\n",
 
 		next = pcb-&gt;buf[ pcb-&gt;len ];
 		pcb-&gt;buf[ pcb-&gt;len ] = '\0';
-		
+
 #define UNICC_ON_SHIFT 	0
 		switch( pcb-&gt;sym )
 		{
@@ -1356,7 +1356,7 @@ UNICC_STATIC int @@prefix_get_sym( @@prefix_pcb* pcb )
 
 		if( @@prefix_dfa_select[ pcb-&gt;tos-&gt;state ] &gt; -1 )
 			@@prefix_lex( pcb );
-		/* 
+		/*
 		 * If there is no DFA state machine,
 		 * try to identify the end-of-file symbol.
 		 * If this also fails, a parse error will
@@ -1375,7 +1375,7 @@ UNICC_STATIC int @@prefix_get_sym( @@prefix_pcb* pcb )
 			UNICC_CLEARIN( pcb );
 			continue;
 		}
-		
+
 		break;
 	}
 	while( 1 );
@@ -1397,7 +1397,7 @@ UNICC_STATIC void @@prefix_dbg_stack( FILE* out,
 			stack-&gt;symbol ? stack-&gt;symbol-&gt;name : "",
 			stack-&gt;symbol ? ")" : "" );
 	}
-	
+
 	fprintf( out, "\n" );
 }
 #endif /* UNICC_STACKDEBUG */
@@ -1420,7 +1420,7 @@ UNICC_STATIC int @@prefix_handle_error( @@prefix_pcb* pcb, FILE* @@prefix_dbg )
 
 		fprintf( @@prefix_dbg,
 				"%s: error recovery: expecting ", UNICC_PARSER );
-				
+
 		for( i = 1; i &lt; @@prefix_act[ pcb-&gt;tos-&gt;state ][0] * 3; i += 3 )
 		{
 			fprintf( @@prefix_dbg, "%d (%s)%s",
@@ -1429,7 +1429,7 @@ UNICC_STATIC int @@prefix_handle_error( @@prefix_pcb* pcb, FILE* @@prefix_dbg )
 				( i == @@prefix_act[ pcb-&gt;tos-&gt;state ][0] * 3 - 3 ) ?
 						"\n" : ", " );
 		}
-		
+
 		fprintf( @@prefix_dbg, "\n%s: error recovery: error_delay is %d, %s\n",
 					UNICC_PARSER, pcb-&gt;error_delay,
 					( pcb-&gt;error_delay ? "error recovery runs silently" :
@@ -1507,7 +1507,7 @@ UNICC_STATIC int @@prefix_handle_error( @@prefix_pcb* pcb, FILE* @@prefix_dbg )
 				break;
 			}
 		}
-		
+
 #if UNICC_DEBUG
 		fprintf( @@prefix_dbg, "%s: error recovery: failed, "
 					"discarding token '%s'\n", UNICC_PARSER,
@@ -1525,18 +1525,18 @@ UNICC_STATIC int @@prefix_handle_error( @@prefix_pcb* pcb, FILE* @@prefix_dbg )
 #if UNICC_DEBUG
 	fprintf( @@prefix_dbg, "%s: error recovery: "
 				"Can't recover this issue, stack is empty.\n",
-					UNICC_PARSER );	
+					UNICC_PARSER );
 #endif
 		UNICC_PARSE_ERROR( pcb );
 		pcb-&gt;error_count++;
 
 		return 1;
 	}
-	
+
 #if UNICC_DEBUG
 	fprintf( @@prefix_dbg, "%s: error recovery: "
 				"trying to continue with modified parser state\n",
-					UNICC_PARSER );	
+					UNICC_PARSER );
 #endif
 
 	pcb-&gt;error_delay = UNICC_ERROR_DELAY + 1;
@@ -1644,7 +1644,7 @@ UNICC_STATIC int @@prefix_handle_error( @@prefix_pcb* pcb, FILE* @@prefix_dbg )
 
 			if( node )
 			{
-				if( lnode = pcb-&gt;tos-&gt;node )
+				if( (lnode = pcb-&gt;tos-&gt;node) )
 				{
 					while( lnode-&gt;next )
 						lnode = lnode-&gt;next;
