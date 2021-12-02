@@ -172,7 +172,7 @@ void print_error( PARSER* parser, ERRORCODE err_id, int err_style, ... )
 	if( do_print )
 	{
 		if( err_style & ERRSTYLE_FILEINFO )
-			fprintf( stderr, "%s(%d):\n    ", filename, line );
+			fprintf( stderr, "%s:%d:0:\n    ", filename, line );
 		else if( err_style & ERRSTYLE_STATEINFO )
 			fprintf( stderr, "state %d: ", state->state_id );
 	}
