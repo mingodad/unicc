@@ -58,9 +58,8 @@ void dump_grammar( FILE* stream, PARSER* parser )
 	if( first_progress )
 		fprintf( stream, "\n" );
 
-	fprintf( stream, "\nGRAMMAR\n\n",
-		( parser->p_basename ? parser->p_basename : "" ),
-			( parser->p_basename ? ": " : "" ) );
+	fprintf( stream, "\nGRAMMAR %s\n\n",
+		( parser->p_basename ? parser->p_basename : "" ) );
 
 	plist_for( parser->symbols, e )
 	{
@@ -380,3 +379,228 @@ void dump_production( FILE* stream, PROD* p,
 	fprintf( stream, "\n" );
 }
 
+static void print_yacc_symbol( FILE* stream, SYMBOL* sym )
+{
+	if( !stream )
+		stream = stderr;
+
+	if( sym->type == SYM_CCL_TERMINAL )
+		fprintf( stream, "'%s'", pccl_to_str( sym->ccl, TRUE ) );
+	else if( sym->type == SYM_REGEX_TERMINAL && sym->keyword )
+		fprintf( stream, "\"%s\"", sym->name );
+	else if( sym->type == SYM_REGEX_TERMINAL && !( sym->keyword ) )
+		fprintf( stream, "/*@*/%s", sym->name );
+	else if( sym->type == SYM_SYSTEM_TERMINAL )
+		fprintf( stream, "%s", sym->name );
+	else
+        {
+                size_t name_len = strlen(sym->name);
+                if(name_len > 0) {
+                    int suffix_pos = name_len-1;
+                    switch(sym->name[suffix_pos]) {
+                        case '*':
+                            fprintf( stream, "%.*s__Z", suffix_pos, sym->name );
+                            break;
+                        case '+':
+                            fprintf( stream, "%.*s__O", suffix_pos, sym->name );
+                            break;
+                        case '?':
+                            fprintf( stream, "%.*s__ZO", suffix_pos, sym->name );
+                            break;
+                        default:
+                            fprintf( stream, "%s", sym->name );
+                    }
+                }
+                else
+                    fprintf( stream, "%s", sym->name );
+        }
+}
+
+static int dump_yacc_production( FILE* stream, PROD* p )
+{
+	plist*		l			= p->rhs;
+	plistel*	e;
+	BOOLEAN		embedded 	= FALSE;
+	SYMBOL*		sym;
+
+	if( !stream )
+		stream = stderr;
+
+        plist_for( p->all_lhs, e )
+        {
+                sym = (SYMBOL*)plist_access( e );
+                print_yacc_symbol( stream, sym );
+                //if(!sym->generated)
+                //    fprintf( stream, "%s ", sym->name );
+        }
+        //if(sym->generated)
+        //    return 0;
+
+        fprintf( stream, " : " );
+
+	plist_for( l, e )
+	{
+		if( embedded && plist_count( l ) > plist_count( p->rhs ) )
+			fprintf( stream, "<<" );
+		else
+		{
+			sym = (SYMBOL*)plist_access( e );
+			print_yacc_symbol( stream, sym );
+		}
+
+		fprintf( stream, " " );
+	}
+
+	fprintf( stream, ";\n" );
+        return 1;
+}
+
+void dump_yacc_terminals( FILE* stream, PARSER* parser )
+{
+        int b = 0;
+	plistel*	e;
+	SYMBOL*		s		= (SYMBOL*)NULL;
+
+	if( !stream )
+		stream = stderr;
+
+	if( first_progress )
+		fprintf( stream, "\n" );
+
+	fprintf( stream, "\n%%token\n\t" );
+
+	plist_for( parser->symbols, e )
+	{
+		s = (SYMBOL*)plist_access( e );
+
+		switch( s->type )
+		{
+			case SYM_NON_TERMINAL:
+			case SYM_CCL_TERMINAL:
+			case SYM_REGEX_TERMINAL:
+			case SYM_SYSTEM_TERMINAL:
+                                print_yacc_symbol( stream, s );
+                                fprintf( stream, " " );
+                                ++b;
+				break;
+
+			default:
+				fprintf( stream, "@undefined@" );
+				break;
+		}
+                if(b && ((b % 5) == 0))
+                    fprintf( stream, "\n\t" );
+	}
+
+	fprintf( stream, "\n" );
+
+	first_progress = FALSE;
+}
+
+void dump_yacc( FILE* stream, PARSER* parser )
+{
+	PROD*		p;
+	plistel*	e;
+
+	if( !stream )
+		stream = stderr;
+
+        dump_yacc_terminals( stream, parser );
+
+	if( first_progress )
+		fprintf( stream, "\n" );
+
+	fprintf( stream, "\n//UNICC grammar %s converted to YACC grammar\n\n",
+		( parser->p_basename ? parser->p_basename : "" ));
+
+	plist_for( parser->productions, e )
+	{
+		p = (PROD*)plist_access( e );
+		if(dump_yacc_production( stream, p ))
+                    fprintf( stream, "\n" );
+	}
+
+	first_progress = FALSE;
+}
+
+static void print_ebnf_symbol( FILE* stream, SYMBOL* sym )
+{
+	if( !stream )
+		stream = stderr;
+
+	if( sym->type == SYM_CCL_TERMINAL )
+		fprintf( stream, "'%s'", pccl_to_str( sym->ccl, TRUE ) );
+	else if( sym->type == SYM_REGEX_TERMINAL && sym->keyword )
+		fprintf( stream, "\"%s\"", sym->name );
+	else if( sym->type == SYM_REGEX_TERMINAL && !( sym->keyword ) )
+		fprintf( stream, "/*@*/%s", sym->name );
+	else if( sym->type == SYM_SYSTEM_TERMINAL )
+		fprintf( stream, "%s", sym->name );
+	else
+		fprintf( stream, "%s", sym->name );
+}
+
+static int dump_ebnf_production( FILE* stream, PROD* p )
+{
+	plist*		l			= p->rhs;
+	plistel*	e;
+	BOOLEAN		embedded 	= FALSE;
+	SYMBOL*		sym;
+        int             rhs_count;
+
+	if( !stream )
+		stream = stderr;
+
+        plist_for( p->all_lhs, e )
+        {
+                sym = (SYMBOL*)plist_access( e );
+                if(!sym->generated)
+                    fprintf( stream, "%s ", sym->name );
+        }
+        if(sym->generated)
+            return 0;
+
+        fprintf( stream, "::= " );
+
+        rhs_count = 0;
+	plist_for( l, e )
+	{
+		if( embedded && plist_count( l ) > plist_count( p->rhs ) )
+			fprintf( stream, "<<" );
+		else
+		{
+			sym = (SYMBOL*)plist_access( e );
+			print_ebnf_symbol( stream, sym );
+		}
+
+		fprintf( stream, " " );
+                ++rhs_count;
+	}
+        if(rhs_count == 0)
+        	fprintf( stream, "/*empty*/" );
+
+	fprintf( stream, "\n" );
+        return 1;
+}
+
+void dump_ebnf( FILE* stream, PARSER* parser )
+{
+	PROD*		p;
+	plistel*	e;
+
+	if( !stream )
+		stream = stderr;
+
+	if( first_progress )
+		fprintf( stream, "\n" );
+	fprintf( stream, "\n//EBNF %s to be viewed at https://www.bottlecaps.de/rr/ui\n\n",
+		( parser->p_basename ? parser->p_basename : "" ));
+
+	plist_for( parser->productions, e )
+	{
+		p = (PROD*)plist_access( e );
+		dump_ebnf_production( stream, p );
+	}
+
+	first_progress = FALSE;
+}

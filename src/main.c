@@ -108,6 +108,7 @@ void print_usage( FILE* stream, char* progname )
 	fprintf( stream, "Usage: %s [OPTION]... FILE\n\n"
 		"  -a    --all             Print all warnings\n"
 		"  -b/-o --basename NAME   Use basename NAME for output files\n"
+		"  -e    --ebnf            Dump EBNF grammar\n"
 		"  -G    --grammar         Dump final (rewritten) grammar\n"
 		"  -h    --help            Print this help and exit\n"
 		"  -l    --language TARGET Specify target language (default: %s)\n"
@@ -124,6 +125,7 @@ void print_usage( FILE* stream, char* progname )
 		"  -x    --xml             Build parser description file additionally\n"
 		"  -X    --XML             Build parser description file only without\n"
 		"                          generating a program-module\n"
+		"  -y    --yacc            Dump yacc grammar\n"
 		"\n"
 		"Errors and warnings are printed to stderr, "
 			"everything else to stdout.\n"
@@ -153,7 +155,7 @@ BOOLEAN get_command_line( int argc, char** argv, char** filename,
 
 	for( i = 0;
 			( rc = pgetopt( opt, &param, &next, argc, argv,
-						"ab:Ghl:no:PsStTvVwxX",
+						"ab:eGhl:no:PsStTvVwxXy",
 						"all grammar help language: no-opt output: basename: "
 							"productions stats states stdout symbols verbose "
 								"version warnings xml XML", i ) ) == 0; i++ )
@@ -219,6 +221,10 @@ BOOLEAN get_command_line( int argc, char** argv, char** filename,
 			parser->gen_xml = TRUE;
 			parser->gen_prog = FALSE;
 		}
+		else if( !strcmp( opt, "yacc" ) || !strcmp( opt, "y" ) )
+			parser->gen_yacc = TRUE;
+		else if( !strcmp( opt, "ebnf" ) || !strcmp( opt, "e" ) )
+			parser->gen_ebnf = TRUE;
 	}
 
 	if( rc == 1 )
@@ -298,6 +304,12 @@ int main( int argc, char** argv )
 				PROGRESS( "Setting up single goal symbol" )
 				setup_single_goal( parser );
 				DONE()
+
+				if( parser->gen_ebnf )
+					dump_ebnf( status, parser );
+                                        
+				if( parser->gen_yacc )
+					dump_yacc( status, parser );
 
 				/* Rewrite the grammar, if required */
 				PROGRESS( "Rewriting grammar" )

@@ -17,6 +17,8 @@ void dump_item_set( FILE* stream, char* title, LIST* list );
 void dump_lalr_states( FILE* stream, PARSER* parser );
 void dump_productions( FILE* stream, PARSER* parser );
 void dump_production( FILE* stream, PROD* p, BOOLEAN with_lhs, BOOLEAN semantics );
+void dump_yacc( FILE* stream, PARSER* parser );
+void dump_ebnf( FILE* stream, PARSER* parser );
 
 /* error.c */
 void print_error( PARSER* parser, ERRORCODE err_id, int err_style, ... );

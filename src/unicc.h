@@ -344,6 +344,8 @@ struct _parser
 	BOOLEAN		all_warnings;
 	BOOLEAN		gen_prog;
 	BOOLEAN		gen_xml;
+	BOOLEAN		gen_yacc;
+	BOOLEAN		gen_ebnf;
 	BOOLEAN		to_stdout;
 	char*		target;			/* Target language by command-line */
 	int			files_count;
